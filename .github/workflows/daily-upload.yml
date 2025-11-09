@@ -1,0 +1,29 @@
+name: Daily Book.xlsx updater
+
+on:
+  schedule:
+    - cron: '30 03 * * *'    # 09:00 IST daily
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-xlsx:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download file
+        env:
+          FILE_URL: ${{ secrets.FILE_URL }}
+        run: |
+          curl -L "$FILE_URL" -o Book.xlsx
+
+      - name: Commit and push if changed
+        run: |
+          git add Book.xlsx
+          git diff --staged --quiet || git commit -m "Daily update: $(date -u +%Y-%m-%d)"
+          git push origin HEAD:main
